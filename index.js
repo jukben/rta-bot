@@ -6,7 +6,7 @@ const GITHUB_NAME = "jukben";
 const GITHUB_TOKEN = process.env.TOKEN;
 const PROJECT = "webscopeio/react-textarea-autocomplete";
 const MESSAGE_TEMPLATE_FN = ({ url }) =>
-  `(bot)\n\nHey! Thank you so much for your PR! I can see that everything is green 👏.\n\n[Here is the playground for this revision](${url}) 🚀\n\nI hope everything is fine! ❤️`;
+  `<!-- rta-bot -->\n\nHey! Thank you so much for your PR!\n\n[Here is the playground for this revision](${url}) 🚀\n\nI hope everything is fine! ❤️\n\n_This message has been generated [automagically](https://github.com/jukben/rta-bot) ✨_`;
 
 const REQUEST_SETTINGS = {
   json: true,
@@ -45,27 +45,30 @@ const sendComment = async (req, res) => {
     return send(res, 500, { status: "ERROR" });
   }
 
-  const isAlreadyCommented = !!comments.filter(({ user: { login }, body }) => {
-    return login === GITHUB_NAME && /^\(bot\)/.test(body);
-  }).length;
+  const alreadyPostedComment = comments.find(({ user: { login }, body }) => {
+    return login === GITHUB_NAME && /rta-bot/.test(body);
+  });
 
-  if (isAlreadyCommented) {
-    return send(res, 200, { status: "IGNORED" });
-  }
-
-  const url = generateURL({ buildNumber, nodeIndex });
-
+  console.log(issueId, alreadyPostedComment);
   try {
     const sentComment = await request(
-      `https://api.github.com/repos/${PROJECT}/issues/${issueId}/comments`,
+      alreadyPostedComment
+        ? `https://api.github.com/repos/${PROJECT}/issues/comments/${
+            alreadyPostedComment.id
+          }`
+        : `https://api.github.com/repos/${PROJECT}/issues/${issueId}/comments`,
       {
         ...REQUEST_SETTINGS,
-        method: "POST",
-        body: { body: MESSAGE_TEMPLATE_FN({ url }) }
+        method: alreadyPostedComment ? "PATCH" : "POST",
+        body: {
+          body: MESSAGE_TEMPLATE_FN({
+            url: generateURL({ buildNumber, nodeIndex })
+          })
+        }
       }
     );
   } catch (e) {
-    return send(res, 500, { status: "ERROR" });
+    return send(res, 500, { status: "ERROR", e });
   }
 
   send(res, 200, { status: "OK" });
