@@ -41,8 +41,8 @@ const sendComment = async (req, res) => {
       `https://api.github.com/repos/${PROJECT}/issues/${issueId}/comments`,
       REQUEST_SETTINGS
     );
-  } catch (e) {
-    return send(res, 500, { status: "ERROR" });
+  } catch (error) {
+    return send(res, 500, { status: "ERROR", error });
   }
 
   const alreadyPostedComment = comments.find(({ user: { login }, body }) => {
@@ -67,8 +67,8 @@ const sendComment = async (req, res) => {
         }
       }
     );
-  } catch (e) {
-    return send(res, 500, { status: "ERROR", e });
+  } catch (error) {
+    return send(res, 500, { status: "ERROR", error });
   }
 
   send(res, 200, { status: "OK" });
