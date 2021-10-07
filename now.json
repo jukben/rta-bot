@@ -1,8 +1,5 @@
 {
   "version": 2,
   "alias": ["rta-bot.now.sh"],
-  "builds": [{ "src": "index.js", "use": "@now/node" }],
-  "env": {
-    "TOKEN": "@bot"
-  }
+  "builds": [{ "src": "index.js", "use": "@now/node" }]
 }
